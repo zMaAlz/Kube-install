@@ -15,12 +15,13 @@
         state: directory
         mode: '0775'
     - name: Add kube config in home dir
+      become: true
       ansible.builtin.shell: "cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config"
     - name: Deploy pod network
-      ansible.builtin.shell: "kubectl apply -f {{ CNI_POD }}"
+      ansible.builtin.shell: "kubectl create -f {{ CNI_POD }}"
     - name: Save the contents of join-command
       ansible.builtin.command: "kubeadm token create --print-join-command"
       register: join-command
     - name: Kubeadm token print
       debug:
-        msg: join-command
+        var: join-command

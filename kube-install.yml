@@ -2,12 +2,18 @@
 - name: Preparation servers and install kubernetes
   hosts: all
   handlers:
-    - name: Start modules
+    - name: Start modules overlay
       become: true
-      ansible.builtin.command: "modprobe overlay && modprobe br_netfilter"
+      ansible.builtin.command: "modprobe overlay"
+    - name: Start modules br_netfilter
+      become: true
+      ansible.builtin.command: "modprobe br_netfilter"
     - name: Apply sysctl params
       become: true
       ansible.builtin.command: "sysctl --system"
+    - name: Reboot
+      become: true
+      ansible.builtin.reboot:
   pre_tasks:
     - name: Save the contents of /etc/os-release
       command: cat /etc/os-release
@@ -33,7 +39,9 @@
       ansible.builtin.template:
         src: "templates/k8s.conf"
         dest: "/etc/modules-load.d/k8s.conf"
-      notify: Start modules
+      notify: 
+        - Start modules overlay
+        - Start modules br_netfilter
     - name: Add params sysctl
       become: true
       ansible.builtin.template:
@@ -44,12 +52,18 @@
       become: true
       ansible.posix.selinux:
         state: disabled
-    - name: Add repository CentOS|Fedora
+    - name: Add repository CentOS
       become: true
       ansible.builtin.template:
-        src: "templates/kubernetes.repo"
-        dest: "/etc/yum.repos.d/kubernetes.repo"
-      when: os_release.stdout.find('CentOS') != -1 or os_release.stdout.find('Fedora') != -1
+        src: "templates/kubernetes-centos.repo"
+        dest: "/etc/yum.repos.d/kubernetes-centos.repo"
+      when: os_release.stdout.find('CentOS') != -1
+    - name: Add repository Fedora
+      become: true
+      ansible.builtin.template:
+        src: "templates/kubernetes-fedora.repo"
+        dest: "/etc/yum.repos.d/kubernetes-fedora.repo"
+      when: os_release.stdout.find('Fedora') != -1
   post_tasks:
     - name: Install kube packages
       become: true
@@ -63,9 +77,16 @@
         - kubelet
         - kubeadm
         - kubectl
-      async: 280
-      poll: 30
+      async: 600
+      poll: 60
       when: os_release.stdout.find('CentOS') != -1 or os_release.stdout.find('Fedora') != -1
+      notify: Reboot
+    - name: Add config containerd
+      become: true
+      ansible.builtin.template:
+        src: "templates/containerd_config.toml"
+        dest: "/etc/containerd/config.toml"
+        mode: '0644'
     - name: Start containerd
       become: true
       ansible.builtin.systemd:
@@ -78,3 +99,4 @@
         name: kubelet
         enabled: true
         state: started
+ 

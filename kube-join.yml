@@ -1,9 +1,21 @@
 ---
 - name: Join the other masters
   hosts: kubemasterjoin
+  tasks:
+    - name: Turn Off swap
+      become: true
+      ansible.builtin.shell: "swapoff -a"
+      changed_when: False  
     - name: Join the other masters
-      ansible.builtin.shell: {{ JOIN_MASTER }}
+      become: true
+      ansible.builtin.shell: "{{ JOIN_MASTER }}"
 - name: Join Worker nodes
   hosts: kubenode
+  tasks:
+    - name: Turn Off swap
+      become: true
+      ansible.builtin.shell: "swapoff -a"
+      changed_when: False  
     - name: Join Worker nodes
-      ansible.builtin.shell: {{ JOIN_WORKER }}
+      become: true
+      ansible.builtin.shell: "{{ JOIN_WORKER }}"
