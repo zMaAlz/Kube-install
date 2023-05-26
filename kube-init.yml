@@ -5,23 +5,41 @@
     - name: Turn Off swap
       become: true
       ansible.builtin.shell: "swapoff -a"
-      changed_when: False  
+      changed_when: False
     - name: Init master node
       become: true
-      ansible.builtin.shell: "kubeadm init --control-plane-endpoint {{ LOAD_BALANCER_IP }}:6443 --upload-certs --pod-network-cidr {{ POD_NETWORK_CIDR }} --apiserver-advertise-address={{ KUBE_CONTROL_NODE_MASTER }}"
+      ansible.builtin.shell: "kubeadm init --control-plane-endpoint {{ LOAD_BALANCER_IP }}:6443 --upload-certs --pod-network-cidr {{ POD_NETWORK_CIDR }}"  # --ignore-preflight-errors Swap
+      ignore_errors: yes
+      register: resultprint
     - name: Add dir .kube
       ansible.builtin.file:
         path: $HOME/.kube
         state: directory
-        mode: '0775'
-    - name: Add kube config in home dir
+        mode: '0755'
+    - name: Copy kube config in home dir
       become: true
-      ansible.builtin.shell: "cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+      ansible.builtin.copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/{{ USER_ADM }}/.kube/config
+        owner: "{{ USER_ADM }}"
+        group: "{{ USER_ADM }}"
+        mode: '0600'
+        remote_src: true
     - name: Deploy pod network
-      ansible.builtin.shell: "kubectl create -f {{ CNI_POD }}"
+      ansible.builtin.shell: "kubectl apply -f {{ CNI_POD }}"
     - name: Save the contents of join-command
       ansible.builtin.command: "kubeadm token create --print-join-command"
-      register: join-command
-    - name: Kubeadm token print
+      register: jointoken
+    - name: upload-certs for master
+      become: true
+      ansible.builtin.shell: "kubeadm init phase upload-certs --upload-certs"
+      register: joinmaster
+    - name: Kubeadm init print
       debug:
-        var: join-command
+        var: resultprint
+    - name: Kubeadm master print
+      debug:
+        var: joinmaster
+    - name: Kubeadm node print
+      debug:
+        var: jointoken

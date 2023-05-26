@@ -1,6 +1,7 @@
 ---
 - name: Join the other masters
   hosts: kubemasterjoin
+  serial: 1
   tasks:
     - name: Turn Off swap
       become: true
@@ -9,13 +10,10 @@
     - name: Join the other masters
       become: true
       ansible.builtin.shell: "{{ JOIN_MASTER }}"
-- name: Join Worker nodes
-  hosts: kubenode
-  tasks:
-    - name: Turn Off swap
-      become: true
-      ansible.builtin.shell: "swapoff -a"
-      changed_when: False  
-    - name: Join Worker nodes
-      become: true
-      ansible.builtin.shell: "{{ JOIN_WORKER }}"
+      register: masteradd
+    - name: Result print
+      debug:
+        var: masteradd
+    - name: Pause for 2 minutes
+        ansible.builtin.pause:
+          minutes: 2    

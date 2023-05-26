@@ -1,7 +1,7 @@
 ---
 LOAD_BALANCER_IP: "192.168.2.210"
 POD_NETWORK_CIDR: "10.244.0.0/16"
-KUBE_CONTROL_NODE_MASTER: "192.168.2.11"
+USER_ADM: "ansible"
 CNI_POD: "https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/calico.yaml"
-JOIN_MASTER: "kubeadm join 192.168.2.210:6443 --token <token> --discovery-token-ca-cert-hash <sha> --control-plane --certificate-key <key>"
-JOIN_WORKER: "kubeadm join 192.168.2.210:6443 --token <token> --discovery-token-ca-cert-hash <sha> "
+JOIN_MASTER: "kubeadm join 192.168.2.210:6443 --token <token> --discovery-token-ca-cert-hash <sha256> --control-plane --certificate-key <crt>"
+JOIN_WORKER: "kubeadm join 192.168.2.210:6443 --token <token> --discovery-token-ca-cert-hash <sha256>"

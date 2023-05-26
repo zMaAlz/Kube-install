@@ -1,0 +1,19 @@
+---
+- name: Join Worker nodes
+  hosts: kubenode
+  serial: 1
+  tasks:
+    - name: Turn Off swap
+      become: true
+      ansible.builtin.shell: "swapoff -a"
+      changed_when: False  
+    - name: Join Worker nodes
+      become: true
+      ansible.builtin.shell: "{{ JOIN_WORKER }}"
+      register: nodeadd
+    - name: Result print
+      debug:
+        var: nodeadd
+    - name: Pause for 2 minutes
+        ansible.builtin.pause:
+          minutes: 2
