@@ -79,8 +79,7 @@
         - kubectl
       async: 600
       poll: 60
-      when: os_release.stdout.find('CentOS') != -1 or os_release.stdout.find('Fedora') != -1
-      notify: Reboot
+      when: os_release.stdout.find('CentOS') != -1 or os_release.stdout.find('Fedora') != -1      
     - name: Add config containerd
       become: true
       ansible.builtin.template:
@@ -99,4 +98,12 @@
         name: kubelet
         enabled: true
         state: started
- 
+    - name: Add --fail-swap-on=false for KUBELET
+      become: true
+      become_user: "{{ nexus_user_name }}"
+      lineinfile:
+        create: no
+        dest: "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
+        insertafter: EOF
+        line: 'Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false"'
+      notify: Reboot

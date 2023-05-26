@@ -15,5 +15,5 @@
       debug:
         var: masteradd
     - name: Pause for 2 minutes
-        ansible.builtin.pause:
-          minutes: 2    
+      ansible.builtin.pause:
+        minutes: 2    

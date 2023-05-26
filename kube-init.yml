@@ -6,11 +6,15 @@
       become: true
       ansible.builtin.shell: "swapoff -a"
       changed_when: False
+      ignore_errors: yes
     - name: Init master node
       become: true
       ansible.builtin.shell: "kubeadm init --control-plane-endpoint {{ LOAD_BALANCER_IP }}:6443 --upload-certs --pod-network-cidr {{ POD_NETWORK_CIDR }}"  # --ignore-preflight-errors Swap
       ignore_errors: yes
       register: resultprint
+    - name: Kubeadm init print
+      debug:
+        var: resultprint
     - name: Add dir .kube
       ansible.builtin.file:
         path: $HOME/.kube
@@ -34,9 +38,6 @@
       become: true
       ansible.builtin.shell: "kubeadm init phase upload-certs --upload-certs"
       register: joinmaster
-    - name: Kubeadm init print
-      debug:
-        var: resultprint
     - name: Kubeadm master print
       debug:
         var: joinmaster
