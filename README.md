@@ -21,7 +21,7 @@ LOAD_BALANCER_IP - IP балансировщика нагрузки
 
 POD_NETWORK_CIDR - подсеть для подов
 
-KUBE_CONTROL_NODE_MASTER - первая Control-Plane нода 
+USER_ADM - пользователь, которому будет скопирован конфиг для kubectl
 
 CNI_POD - Версия CNI
 

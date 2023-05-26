@@ -86,6 +86,12 @@
         src: "templates/containerd_config.toml"
         dest: "/etc/containerd/config.toml"
         mode: '0644'
+    - name: Copy conf kubelet
+      become: true
+      ansible.builtin.template:
+        src: "templates/20-allow-swap.conf"
+        dest: "/etc/systemd/system/kubelet.service.d/20-allow-swap.conf"
+        mode: '0644'
     - name: Start containerd
       become: true
       ansible.builtin.systemd:
@@ -98,12 +104,4 @@
         name: kubelet
         enabled: true
         state: started
-    - name: Add --fail-swap-on=false for KUBELET
-      become: true
-      become_user: "{{ nexus_user_name }}"
-      lineinfile:
-        create: no
-        dest: "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
-        insertafter: EOF
-        line: 'Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false"'
-      notify: Reboot
+#      notify: Reboot
