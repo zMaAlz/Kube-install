@@ -6,7 +6,13 @@
     - name: Turn Off swap
       become: true
       ansible.builtin.shell: "swapoff -a"
-      changed_when: False  
+      changed_when: False
+    - name: reloaded kubelet
+      become: true
+      ansible.builtin.systemd:
+        name: kubelet
+        state: restarted
+        daemon_reload: true
     - name: Join Worker nodes
       become: true
       ansible.builtin.shell: "{{ JOIN_WORKER }}"
@@ -14,6 +20,6 @@
     - name: Result print
       debug:
         var: nodeadd
-    - name: Pause for 2 minutes
+    - name: Pause for 1 minutes
       ansible.builtin.pause:
-        minutes: 2
+        minutes: 1

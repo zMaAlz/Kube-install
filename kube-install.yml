@@ -86,12 +86,32 @@
         src: "templates/containerd_config.toml"
         dest: "/etc/containerd/config.toml"
         mode: '0644'
+    - name: Add dir kubelet.service.d
+      become: true
+      ansible.builtin.file:
+        path: "/etc/systemd/system/kubelet.service.d"
+        state: directory
+        mode: '0755'
     - name: Copy conf kubelet
       become: true
       ansible.builtin.template:
         src: "templates/20-allow-swap.conf"
         dest: "/etc/systemd/system/kubelet.service.d/20-allow-swap.conf"
         mode: '0644'
+    - name: Add conf kubelet
+      become: true
+      lineinfile:
+        create: no
+        dest: "/usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf"
+        insertafter: EOF
+        line: 'Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false"'
+    - name: update env kubelet
+      become: true
+      lineinfile:
+        create: no
+        dest: "/etc/sysconfig/kubelet"
+        insertafter: EOF
+        line: 'KUBELET_EXTRA_ARGS=--fail-swap-on=false' 
     - name: Start containerd
       become: true
       ansible.builtin.systemd:
@@ -104,4 +124,4 @@
         name: kubelet
         enabled: true
         state: started
-#      notify: Reboot
+      notify: Reboot

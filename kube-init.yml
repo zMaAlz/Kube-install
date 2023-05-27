@@ -9,7 +9,7 @@
       ignore_errors: yes
     - name: Init master node
       become: true
-      ansible.builtin.shell: "kubeadm init --control-plane-endpoint {{ LOAD_BALANCER_IP }}:6443 --upload-certs --pod-network-cidr {{ POD_NETWORK_CIDR }} --ignore-preflight-errors=Swap"
+      ansible.builtin.shell: "kubeadm init --pod-network-cidr {{ POD_NETWORK_CIDR }} --ignore-preflight-errors=Swap"
       ignore_errors: yes
       register: resultprint
     - name: Kubeadm init print
@@ -29,18 +29,17 @@
         group: "{{ USER_ADM }}"
         mode: '0600'
         remote_src: true
-    - name: Deploy pod network
-      ansible.builtin.shell: "kubectl apply -f {{ CNI_POD }}"
     - name: Save the contents of join-command
       ansible.builtin.command: "kubeadm token create --print-join-command"
       register: jointoken
-    - name: upload-certs for master
-      become: true
-      ansible.builtin.shell: "kubeadm init phase upload-certs --upload-certs"
-      register: joinmaster
-    - name: Kubeadm master print
-      debug:
-        var: joinmaster
     - name: Kubeadm node print
       debug:
         var: jointoken
+    - name: Pause for 4 minutes
+      ansible.builtin.pause:
+        minutes: 4
+    - name: Deploy pod network
+      ansible.builtin.shell: "kubectl apply -f {{ CNI_POD }}"
+    - name: Reboot
+      become: true
+      ansible.builtin.reboot:
